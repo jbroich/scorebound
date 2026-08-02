@@ -41,6 +41,22 @@ Ohne gesetzte Variablen gelten fuer die Entwicklung die Platzhalter
 `jdbc:postgresql://localhost:5432/scorebound`, Benutzer `scorebound` und Passwort
 `scorebound`. Diese Werte koennen an den vorhandenen Container angepasst werden.
 
+## Ersten Admin anlegen
+
+Beim ersten Start kann Scorebound den initialen Admin aus zwei
+Umgebungsvariablen anlegen:
+
+```powershell
+$env:SCOREBOUND_BOOTSTRAP_ADMIN_USERNAME='admin'
+$env:SCOREBOUND_BOOTSTRAP_ADMIN_PASSWORD='<temporary password>'
+```
+
+Beide Werte muessen gemeinsam gesetzt werden. Das Passwort wird nur als sicherer
+Hash gespeichert und muss beim ersten Login geaendert werden. Nach dem Anlegen
+des Accounts koennen die Bootstrap-Variablen aus der Laufzeitkonfiguration
+entfernt werden. Fuer den spaeteren HTTPS-Betrieb wird zusaetzlich
+`SCOREBOUND_SESSION_COOKIE_SECURE=true` gesetzt.
+
 ## Backend
 
 ```powershell
@@ -64,7 +80,9 @@ Vite zeigt die lokale URL beim Start an, standardmaessig
 ## Pruefen
 
 Die Backend-Tests verwenden eine fluechtige In-Memory-Datenbank. Fuer den
-Testlauf muss daher keine lokale PostgreSQL-Datenbank gestartet werden.
+Testlauf muss daher keine lokale PostgreSQL-Datenbank gestartet werden. Flyway
+wendet dabei dieselben versionierten Migrationen wie in Produktion an; die CI
+prueft den Backend-Testlauf zusaetzlich gegen PostgreSQL.
 
 ```powershell
 cd backend

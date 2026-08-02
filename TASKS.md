@@ -17,7 +17,7 @@ have been created.
    - Specify accounts, roles, teams, members, memberships, scoreboards,
      periods, participation, and immutable score transactions.
    - Record lifecycle rules, authorization, and validation errors.
-4. [ ] `feat: implement authentication and role-based access`
+4. [x] `feat: implement authentication and role-based access`
    - Support `Admin`, `Scorer`, `Member`, and `Display` roles.
    - Bootstrap the first admin and support temporary passwords.
 5. [ ] `feat: manage teams and members`
