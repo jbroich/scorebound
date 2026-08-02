@@ -23,7 +23,7 @@ have been created.
 5. [x] `feat: manage teams and members`
    - Manage team presentation data and member status.
    - Preserve membership history with one active team per member.
-6. [ ] `feat: manage scoreboards and competition periods`
+6. [x] `feat: manage scoreboards and competition periods`
    - Select global teams per scoreboard.
    - Enforce one active period and archive completed standings.
 7. [ ] `feat: record and cancel score transactions`
