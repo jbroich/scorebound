@@ -9,6 +9,11 @@ Die abgestimmten Anforderungen stehen in
 Entwicklungs-Backlog wird bis zur Anlage der GitHub Issues in
 [`TASKS.md`](TASKS.md) gepflegt.
 
+Das technische Fachmodell und der geplante HTTP-Vertrag sind in
+[`docs/domain-model.md`](docs/domain-model.md) und
+[`docs/api-contract.md`](docs/api-contract.md) beschrieben. Architektur-
+entscheidungen werden unter [`docs/decisions`](docs/decisions) festgehalten.
+
 ## Struktur
 
 - `backend/`: Java 21, Spring Boot 4.1, Maven und PostgreSQL
