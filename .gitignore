@@ -24,3 +24,9 @@ frontend/*.tsbuildinfo
 # Test and coverage output
 coverage/
 test-results/
+
+# Repository automation
+!.github/
+.github/*
+!.github/workflows/
+!.github/workflows/**
