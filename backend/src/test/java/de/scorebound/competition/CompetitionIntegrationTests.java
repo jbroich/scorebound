@@ -193,7 +193,7 @@ class CompetitionIntegrationTests {
 				.orElseThrow();
 		assertThat(active.getStatus()).isEqualTo(PeriodStatus.ACTIVE);
 		assertThat(participantRepository.findByPeriodIdOrderByPositionAsc(active.getId()))
-				.singleElement().extracting(PeriodParticipant::getCurrentScore).isEqualTo(0);
+				.singleElement().extracting(PeriodParticipant::getCurrentScore).isEqualTo(0L);
 
 		competitionService.processLifecycle(endsAt.plusSeconds(1));
 		CompetitionPeriod closed = periodRepository.findById(active.getId()).orElseThrow();

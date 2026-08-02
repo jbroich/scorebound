@@ -10,5 +10,7 @@ public interface MembershipRepository extends JpaRepository<Membership, UUID> {
 
 	Optional<Membership> findByOpenMembershipKey(UUID memberId);
 
+	Optional<Membership> findByMemberIdAndValidUntilIsNull(UUID memberId);
+
 	List<Membership> findByMemberIdOrderByValidFromDesc(UUID memberId);
 }

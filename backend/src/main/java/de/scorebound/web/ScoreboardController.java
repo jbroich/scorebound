@@ -234,6 +234,6 @@ public class ScoreboardController {
 	}
 
 	public record ParticipantResponse(UUID id, UUID teamId, String teamName, String shortName,
-			String color, int score, int rank, boolean winner) {
+			String color, long score, int rank, boolean winner) {
 	}
 }
