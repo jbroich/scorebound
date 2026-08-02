@@ -40,7 +40,7 @@ have been created.
     - Render adaptive glass containers with proportional colored balls.
     - Support transaction and winner animations, optional sounds, and display
       rotation.
-11. [ ] `feat: localize and theme the web interface`
+11. [x] `feat: localize and theme the web interface`
     - Use English by default and provide German translations.
     - Support system light/dark mode and the dedicated dark display theme.
 12. [ ] `infra: package Scorebound for ARM64 with Docker Compose`
