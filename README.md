@@ -13,6 +13,8 @@ Das technische Fachmodell und der geplante HTTP-Vertrag sind in
 [`docs/domain-model.md`](docs/domain-model.md) und
 [`docs/api-contract.md`](docs/api-contract.md) beschrieben. Architektur-
 entscheidungen werden unter [`docs/decisions`](docs/decisions) festgehalten.
+Die Produktionsbereitstellung auf dem Raspberry Pi ist in
+[`docs/raspberry-pi-deployment.md`](docs/raspberry-pi-deployment.md) beschrieben.
 
 ## Struktur
 
