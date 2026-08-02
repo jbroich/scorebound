@@ -94,6 +94,12 @@ public class Account {
 		this.modifiedBy = actorId;
 	}
 
+	public void changeMemberLink(UUID memberId, UUID actorId) {
+		this.memberId = memberId;
+		this.modifiedAt = Instant.now();
+		this.modifiedBy = actorId;
+	}
+
 	public UUID getId() {
 		return id;
 	}

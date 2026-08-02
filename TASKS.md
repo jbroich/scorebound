@@ -20,7 +20,7 @@ have been created.
 4. [x] `feat: implement authentication and role-based access`
    - Support `Admin`, `Scorer`, `Member`, and `Display` roles.
    - Bootstrap the first admin and support temporary passwords.
-5. [ ] `feat: manage teams and members`
+5. [x] `feat: manage teams and members`
    - Manage team presentation data and member status.
    - Preserve membership history with one active team per member.
 6. [ ] `feat: manage scoreboards and competition periods`
@@ -40,7 +40,7 @@ have been created.
     - Render adaptive glass containers with proportional colored balls.
     - Support transaction and winner animations, optional sounds, and display
       rotation.
-11. [ ] `feat: localize and theme the web interface`
+11. [x] `feat: localize and theme the web interface`
     - Use English by default and provide German translations.
     - Support system light/dark mode and the dedicated dark display theme.
 12. [x] `infra: package Scorebound for ARM64 with Docker Compose`

@@ -1,5 +1,8 @@
 package de.scorebound.identity;
 
+import de.scorebound.teams.MemberRepository;
+import de.scorebound.web.ApiException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,12 +22,14 @@ public class AccountService {
 	private final AccountRepository accountRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final TemporaryPasswordGenerator temporaryPasswordGenerator;
+	private final MemberRepository memberRepository;
 
 	public AccountService(AccountRepository accountRepository, PasswordEncoder passwordEncoder,
-			TemporaryPasswordGenerator temporaryPasswordGenerator) {
+			TemporaryPasswordGenerator temporaryPasswordGenerator, MemberRepository memberRepository) {
 		this.accountRepository = accountRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.temporaryPasswordGenerator = temporaryPasswordGenerator;
+		this.memberRepository = memberRepository;
 	}
 
 	@Transactional
@@ -71,6 +76,23 @@ public class AccountService {
 			throw new IllegalArgumentException("New password must be different");
 		}
 		account.replacePassword(passwordEncoder.encode(newPassword), false, accountId);
+	}
+
+	@Transactional
+	public Account changeMemberLink(UUID accountId, UUID memberId, UUID actorId) {
+		Account account = requireAccount(accountId);
+		if (memberId != null) {
+			if (!memberRepository.existsById(memberId)) {
+				throw new ApiException(HttpStatus.NOT_FOUND, "resource_not_found",
+						"Member does not exist");
+			}
+			if (accountRepository.existsByMemberIdAndIdNot(memberId, accountId)) {
+				throw new ApiException(HttpStatus.CONFLICT, "member_already_linked",
+						"Member is already linked to another account");
+			}
+		}
+		account.changeMemberLink(memberId, actorId);
+		return account;
 	}
 
 	@Transactional(readOnly = true)
