@@ -74,3 +74,38 @@ jobs:
         run: npm run lint
       - name: Build frontend
         run: npm run build
+
+  packaging:
+    name: ARM64 container build
+    runs-on: ubuntu-latest
+    env:
+      SCOREBOUND_DB_PASSWORD: ci-compose-password
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - name: Validate Compose configuration
+        run: docker compose config --quiet
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Build backend image for ARM64
+        uses: docker/build-push-action@v7
+        with:
+          context: backend
+          file: backend/Dockerfile
+          platforms: linux/arm64
+          push: false
+          tags: scorebound-api:ci
+          cache-from: type=gha,scope=scorebound-api-arm64
+          cache-to: type=gha,mode=max,scope=scorebound-api-arm64
+      - name: Build frontend image for ARM64
+        uses: docker/build-push-action@v7
+        with:
+          context: frontend
+          file: frontend/Dockerfile
+          platforms: linux/arm64
+          push: false
+          tags: scorebound-web:ci
+          cache-from: type=gha,scope=scorebound-web-arm64
+          cache-to: type=gha,mode=max,scope=scorebound-web-arm64
