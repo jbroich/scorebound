@@ -13,6 +13,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Objects;
 @Component
 public class AccountSessionGuardFilter extends OncePerRequestFilter {
 
@@ -55,7 +56,8 @@ public class AccountSessionGuardFilter extends OncePerRequestFilter {
 		return accountRepository.findById(principal.accountId())
 				.map(account -> !account.isEnabled()
 						|| !account.getPasswordHash().equals(principal.getPassword())
-						|| !account.getRoles().equals(principal.roles()))
+						|| !account.getRoles().equals(principal.roles())
+						|| !Objects.equals(account.getMemberId(), principal.memberId()))
 				.orElse(true);
 	}
 

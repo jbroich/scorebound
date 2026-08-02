@@ -71,6 +71,7 @@ response and are never retrievable later.
 | `POST /teams` | Create a team | Admin |
 | `GET /teams/{teamId}` | Read a team | Authorized viewer |
 | `PATCH /teams/{teamId}` | Change team presentation or status | Admin |
+| `GET /teams/{teamId}/image` | Read the optional managed image | Authorized viewer |
 | `PUT /teams/{teamId}/image` | Validate and replace the optional image | Admin |
 | `DELETE /teams/{teamId}/image` | Remove the optional image | Admin |
 | `GET /members` | Page through authorized members | Authenticated |
@@ -81,6 +82,8 @@ response and are never retrievable later.
 
 The team-change command accepts the new `teamId` and effective instant. An MVP
 request cannot backdate a change before the current membership began.
+Team images are sent as raw PNG, JPEG, or WebP request bodies, are limited to
+2 MB, and are verified against their file signature before storage.
 
 ## Scoreboards and periods
 

@@ -131,7 +131,7 @@ public class SessionController {
 			@NotBlank @Size(min = 12, max = 128) String newPassword) {
 	}
 
-	public record SessionResponse(String accountId, String username, Set<Role> roles,
+	public record SessionResponse(String accountId, String username, String memberId, Set<Role> roles,
 			Set<Role> effectiveRoles, boolean mustChangePassword, String preferredLocale,
 			SessionMode mode, String csrfToken) {
 
@@ -142,6 +142,7 @@ public class SessionController {
 					.map(authority -> Role.valueOf(authority.getAuthority().substring("ROLE_".length())))
 					.collect(java.util.stream.Collectors.toUnmodifiableSet());
 			return new SessionResponse(principal.accountId().toString(), principal.getUsername(),
+					principal.memberId() == null ? null : principal.memberId().toString(),
 					principal.roles(), effectiveRoles, principal.mustChangePassword(),
 					principal.preferredLocale(), mode, csrfToken);
 		}

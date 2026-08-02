@@ -1,5 +1,6 @@
 package de.scorebound.web;
 
+import tools.jackson.databind.JsonNode;
 import de.scorebound.identity.Account;
 import de.scorebound.identity.AccountService;
 import de.scorebound.identity.Role;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,23 +51,53 @@ public class AccountController {
 				accountService.issueTemporaryPassword(accountId, actor.accountId()));
 	}
 
+	@PatchMapping("/{accountId}")
+	public AccountResponse updateAccount(@PathVariable UUID accountId,
+			@RequestBody JsonNode request,
+			@AuthenticationPrincipal ScoreboundPrincipal actor) {
+		if (!request.isObject() || request.size() != 1 || !request.has("memberId")) {
+			throw new IllegalArgumentException("Only memberId can be changed by this endpoint yet");
+		}
+		JsonNode memberNode = request.get("memberId");
+		UUID memberId;
+		try {
+			memberId = memberNode.isNull() ? null : UUID.fromString(memberNode.asText());
+		} catch (IllegalArgumentException exception) {
+			throw new IllegalArgumentException("memberId must be a UUID or null", exception);
+		}
+		return AccountResponse.from(accountService.changeMemberLink(accountId, memberId,
+				actor.accountId()));
+	}
+
 	public record CreateAccountRequest(
 			@NotBlank @Pattern(regexp = "[A-Za-z0-9._-]{3,64}") String username,
 			@NotEmpty Set<Role> roles,
 			@Pattern(regexp = "en|de") String preferredLocale) {
 	}
 
-	public record TemporaryAccountResponse(String id, String username, Set<Role> roles,
+	public record TemporaryAccountResponse(String id, String username, String memberId, Set<Role> roles,
 			boolean enabled, boolean mustChangePassword, String preferredLocale,
 			String temporaryPassword) {
 
 		static TemporaryAccountResponse from(Account account, String temporaryPassword) {
 			return new TemporaryAccountResponse(account.getId().toString(), account.getUsername(),
+					account.getMemberId() == null ? null : account.getMemberId().toString(),
 					account.getRoles(), account.isEnabled(), account.isMustChangePassword(),
 					account.getPreferredLocale(), temporaryPassword);
 		}
 	}
 
 	public record TemporaryPasswordResponse(String accountId, String temporaryPassword) {
+	}
+
+	public record AccountResponse(String id, String username, String memberId, Set<Role> roles,
+			boolean enabled, boolean mustChangePassword, String preferredLocale) {
+
+		static AccountResponse from(Account account) {
+			return new AccountResponse(account.getId().toString(), account.getUsername(),
+					account.getMemberId() == null ? null : account.getMemberId().toString(),
+					account.getRoles(), account.isEnabled(), account.isMustChangePassword(),
+					account.getPreferredLocale());
+		}
 	}
 }
