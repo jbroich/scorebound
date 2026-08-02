@@ -1,121 +1,183 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useEffect, useState } from 'react'
 import './App.css'
+import { LocaleProvider } from './i18n/LocaleProvider'
+import type { Locale } from './i18n/messages'
+import { useLocale } from './i18n/useLocale'
 
-function App() {
-  const [count, setCount] = useState(0)
+type Surface = 'management' | 'display'
+
+function getSurface(): Surface {
+  const path = window.location.pathname.replace(/\/+$/, '')
+  return path === '/display' ? 'display' : 'management'
+}
+
+function useClock() {
+  const [now, setNow] = useState(() => new Date())
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 30_000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  return now
+}
+
+function LanguageSwitcher() {
+  const { locale, setLocale, t } = useLocale()
+  const options: Array<{ value: Locale; label: string }> = [
+    { value: 'en', label: t('languageEnglish') },
+    { value: 'de', label: t('languageGerman') },
+  ]
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
+    <div className="segmented-control" aria-label={t('languageLabel')}>
+      {options.map((option) => (
         <button
+          className="segmented-control__button"
           type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+          key={option.value}
+          aria-pressed={locale === option.value}
+          onClick={() => setLocale(option.value)}
         >
-          Count is {count}
+          {option.label}
         </button>
+      ))}
+    </div>
+  )
+}
+
+function Brand() {
+  return (
+    <a className="brand" href="/" aria-label="Scorebound">
+      <span className="brand__mark" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </span>
+      <span>Scorebound</span>
+    </a>
+  )
+}
+
+function ManagementSurface() {
+  const { formatDateTime, formatNumber, timeZone, t } = useLocale()
+  const now = useClock()
+
+  return (
+    <main className="management-shell">
+      <header className="topbar">
+        <Brand />
+        <LanguageSwitcher />
+      </header>
+
+      <section className="intro" aria-labelledby="intro-title">
+        <p className="eyebrow">{t('managementEyebrow')}</p>
+        <h1 id="intro-title">{t('managementTitle')}</h1>
+        <p className="intro__copy">{t('managementDescription')}</p>
       </section>
 
-      <div className="ticks"></div>
+      <section className="settings-grid" aria-label={t('settingsLabel')}>
+        <article className="settings-card settings-card--accent">
+          <span className="settings-card__index" aria-hidden="true">01</span>
+          <h2>{t('languageTitle')}</h2>
+          <p>{t('languageDescription')}</p>
+          <LanguageSwitcher />
+        </article>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+        <article className="settings-card">
+          <span className="settings-card__index" aria-hidden="true">02</span>
+          <h2>{t('managementThemeTitle')}</h2>
+          <p>{t('managementThemeDescription')}</p>
+          <div className="theme-sample" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+        </article>
+
+        <article className="settings-card">
+          <span className="settings-card__index" aria-hidden="true">03</span>
+          <h2>{t('formattingTitle')}</h2>
+          <p>{t('formattingDescription')}</p>
+          <dl className="format-sample">
+            <div>
+              <dt>{t('numberLabel')}</dt>
+              <dd>{formatNumber(1250)}</dd>
+            </div>
+            <div>
+              <dt>{t('timeLabel')}</dt>
+              <dd>{formatDateTime(now)}</dd>
+            </div>
+            <div>
+              <dt>{t('timezoneLabel')}</dt>
+              <dd>{timeZone}</dd>
+            </div>
+          </dl>
+        </article>
+      </section>
+
+      <a className="display-link" href="/display">
+        <span>
+          <strong>{t('displayLinkTitle')}</strong>
+          <small>{t('displayLinkDescription')}</small>
+        </span>
+        <span className="display-link__arrow" aria-hidden="true">↗</span>
+      </a>
+    </main>
+  )
+}
+
+function DisplaySurface() {
+  const { formatDateTime, t } = useLocale()
+  const now = useClock()
+
+  return (
+    <main className="display-shell">
+      <header className="display-header">
+        <Brand />
+        <div className="display-header__actions">
+          <LanguageSwitcher />
+          <a className="text-link" href="/">{t('backToManagement')}</a>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
+      </header>
+
+      <section className="display-stage" aria-labelledby="display-title">
+        <div className="display-stage__glow" aria-hidden="true" />
+        <p className="eyebrow">{t('displayEyebrow')}</p>
+        <h1 id="display-title">{t('displayTitle')}</h1>
+        <p>{t('displayDescription')}</p>
+        <div className="display-status" role="status">
+          <span className="display-status__dot" aria-hidden="true" />
+          {t('displayWaiting')}
         </div>
       </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      <footer className="display-footer">
+        <span>{t('displayThemeLabel')}</span>
+        <time dateTime={now.toISOString()}>{formatDateTime(now)}</time>
+      </footer>
+    </main>
+  )
+}
+
+function ScoreboundApp() {
+  const surface = getSurface()
+
+  useEffect(() => {
+    document.documentElement.dataset.surface = surface
+    return () => {
+      delete document.documentElement.dataset.surface
+    }
+  }, [surface])
+
+  return surface === 'display' ? <DisplaySurface /> : <ManagementSurface />
+}
+
+function App() {
+  return (
+    <LocaleProvider>
+      <ScoreboundApp />
+    </LocaleProvider>
   )
 }
 

@@ -1,8 +1,8 @@
 # Scorebound
 
-Scorebound ist als lokal betreibbare, responsive Webanwendung fuer Teams und
-Punktestaende geplant. Das Repository enthaelt derzeit ausschliesslich die
-technischen Projektgrundgerueste. Fachfunktionen sind noch nicht implementiert.
+Scorebound ist eine lokal betreibbare, responsive Webanwendung fuer Teams und
+Punktestaende. Die Anwendung wird entlang des dokumentierten MVP-Backlogs
+schrittweise entwickelt.
 
 Die abgestimmten Anforderungen stehen in
 [`docs/product-requirements.md`](docs/product-requirements.md). Der geordnete
@@ -76,6 +76,12 @@ npm run dev
 
 Vite zeigt die lokale URL beim Start an, standardmaessig
 <http://localhost:5173>.
+
+Die Oberflaeche startet auf Englisch und kann dauerhaft pro Browser auf Deutsch
+umgeschaltet werden. Datums- und Zeitangaben verwenden standardmaessig
+`Europe/Berlin`. Eine andere IANA-Zeitzone kann beim Frontend-Build ueber
+`VITE_SCOREBOUND_TIME_ZONE` gesetzt werden. Die eigenstaendige dunkle
+Display-Oberflaeche ist unter <http://localhost:5173/display> erreichbar.
 
 ## Pruefen
 
