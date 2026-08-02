@@ -43,7 +43,7 @@ have been created.
 11. [x] `feat: localize and theme the web interface`
     - Use English by default and provide German translations.
     - Support system light/dark mode and the dedicated dark display theme.
-12. [ ] `infra: package Scorebound for ARM64 with Docker Compose`
+12. [x] `infra: package Scorebound for ARM64 with Docker Compose`
     - Expose the web app through one local HTTP port for Cloudflare Tunnel.
     - Keep configuration and secrets outside the images.
 13. [ ] `cd: deploy main to the Raspberry Pi`
