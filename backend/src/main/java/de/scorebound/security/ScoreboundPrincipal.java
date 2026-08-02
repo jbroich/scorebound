@@ -22,6 +22,7 @@ public final class ScoreboundPrincipal implements UserDetails {
 	private final boolean enabled;
 	private final boolean mustChangePassword;
 	private final String preferredLocale;
+	private final UUID memberId;
 	private final Set<Role> roles;
 
 	private ScoreboundPrincipal(Account account) {
@@ -31,6 +32,7 @@ public final class ScoreboundPrincipal implements UserDetails {
 		this.enabled = account.isEnabled();
 		this.mustChangePassword = account.isMustChangePassword();
 		this.preferredLocale = account.getPreferredLocale();
+		this.memberId = account.getMemberId();
 		this.roles = account.getRoles();
 	}
 
@@ -48,6 +50,10 @@ public final class ScoreboundPrincipal implements UserDetails {
 
 	public String preferredLocale() {
 		return preferredLocale;
+	}
+
+	public UUID memberId() {
+		return memberId;
 	}
 
 	public Set<Role> roles() {

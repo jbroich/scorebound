@@ -20,7 +20,7 @@ have been created.
 4. [x] `feat: implement authentication and role-based access`
    - Support `Admin`, `Scorer`, `Member`, and `Display` roles.
    - Bootstrap the first admin and support temporary passwords.
-5. [ ] `feat: manage teams and members`
+5. [x] `feat: manage teams and members`
    - Manage team presentation data and member status.
    - Preserve membership history with one active team per member.
 6. [ ] `feat: manage scoreboards and competition periods`

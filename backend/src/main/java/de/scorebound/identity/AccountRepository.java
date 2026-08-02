@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface AccountRepository extends JpaRepository<Account, UUID> {
 
 	Optional<Account> findByNormalizedUsername(String normalizedUsername);
+
+	boolean existsByMemberIdAndIdNot(UUID memberId, UUID id);
 }
