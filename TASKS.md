@@ -6,7 +6,7 @@ have been created.
 
 ## MVP milestone
 
-1. [ ] `chore: establish a reproducible project baseline`
+1. [x] `chore: establish a reproducible project baseline`
    - Make backend tests independent from a manually prepared database.
    - Verify frontend linting and production builds.
    - Document the supported local development workflow.

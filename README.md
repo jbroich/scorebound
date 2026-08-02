@@ -58,11 +58,15 @@ Vite zeigt die lokale URL beim Start an, standardmaessig
 
 ## Pruefen
 
+Die Backend-Tests verwenden eine fluechtige In-Memory-Datenbank. Fuer den
+Testlauf muss daher keine lokale PostgreSQL-Datenbank gestartet werden.
+
 ```powershell
 cd backend
 .\mvnw.cmd test
 
 cd ..\frontend
+npm ci
 npm run lint
 npm run build
 ```
