@@ -26,7 +26,7 @@ have been created.
 6. [x] `feat: manage scoreboards and competition periods`
    - Select global teams per scoreboard.
    - Enforce one active period and archive completed standings.
-7. [ ] `feat: record and cancel score transactions`
+7. [x] `feat: record and cancel score transactions`
    - Credit or debit a team or member with a required reason.
    - Preserve an auditable, visible cancellation trail.
 8. [ ] `feat: build the responsive management interface`

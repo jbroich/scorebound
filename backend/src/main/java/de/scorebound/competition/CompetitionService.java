@@ -229,7 +229,7 @@ public class CompetitionService {
 		}
 		List<PeriodParticipant> participants = participantRepository
 				.findByPeriodIdOrderByPositionAsc(period.getId());
-		int winningScore = participants.stream().mapToInt(PeriodParticipant::getCurrentScore)
+		long winningScore = participants.stream().mapToLong(PeriodParticipant::getCurrentScore)
 				.max().orElse(0);
 		participants.forEach(participant -> participant
 				.markWinner(participant.getCurrentScore() == winningScore));
@@ -239,10 +239,10 @@ public class CompetitionService {
 	private List<RankedParticipant> rankedParticipants(CompetitionPeriod period) {
 		List<PeriodParticipant> participants = new ArrayList<>(participantRepository
 				.findByPeriodIdOrderByPositionAsc(period.getId()));
-		participants.sort(Comparator.comparingInt(PeriodParticipant::getCurrentScore).reversed()
+		participants.sort(Comparator.comparingLong(PeriodParticipant::getCurrentScore).reversed()
 				.thenComparingInt(PeriodParticipant::getPosition));
 		List<RankedParticipant> ranked = new ArrayList<>();
-		Integer previousScore = null;
+		Long previousScore = null;
 		int rank = 0;
 		for (int index = 0; index < participants.size(); index++) {
 			PeriodParticipant participant = participants.get(index);

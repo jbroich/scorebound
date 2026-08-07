@@ -26,7 +26,7 @@ public class PeriodParticipant {
 	private int position;
 
 	@Column(name = "current_score", nullable = false)
-	private int currentScore;
+	private long currentScore;
 
 	@Column(nullable = false)
 	private boolean winner;
@@ -60,11 +60,12 @@ public class PeriodParticipant {
 	}
 
 	public void markWinner(boolean winner) { this.winner = winner; }
+	public void adjustScore(long adjustment) { this.currentScore += adjustment; }
 
 	public UUID getId() { return id; }
 	public UUID getPeriodId() { return periodId; }
 	public UUID getTeamId() { return teamId; }
 	public int getPosition() { return position; }
-	public int getCurrentScore() { return currentScore; }
+	public long getCurrentScore() { return currentScore; }
 	public boolean isWinner() { return winner; }
 }
