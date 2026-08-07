@@ -51,6 +51,11 @@ public class TeamMemberService {
 	}
 
 	@Transactional(readOnly = true)
+	public List<Team> listTeams(boolean includeInactive) {
+		return includeInactive ? teamRepository.findAllByOrderByNameAsc() : listActiveTeams();
+	}
+
+	@Transactional(readOnly = true)
 	public Team requireTeam(UUID teamId) {
 		return teamRepository.findById(teamId)
 				.orElseThrow(() -> notFound("Team does not exist"));

@@ -9,6 +9,8 @@ public interface TeamRepository extends JpaRepository<Team, UUID> {
 
 	List<Team> findByActiveTrueOrderByNameAsc();
 
+	List<Team> findAllByOrderByNameAsc();
+
 	boolean existsByActiveNameKeyAndIdNot(String activeNameKey, UUID id);
 
 	boolean existsByActiveShortNameKeyAndIdNot(String activeShortNameKey, UUID id);

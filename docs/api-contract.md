@@ -50,7 +50,7 @@ password replacement, and logout.
 
 | Method and path | Purpose | Access |
 | --- | --- | --- |
-| `GET /accounts` | Page through accounts | Admin |
+| `GET /accounts` | List accounts in username order | Admin |
 | `POST /accounts` | Create an account with a temporary password | Admin |
 | `GET /accounts/{accountId}` | Read account roles and assignments | Admin or self |
 | `PATCH /accounts/{accountId}` | Change status, roles, locale, or member link | Admin |
@@ -67,7 +67,7 @@ response and are never retrievable later.
 
 | Method and path | Purpose | Access |
 | --- | --- | --- |
-| `GET /teams` | List authorized active teams | Authenticated |
+| `GET /teams` | List active teams; admins can request `includeInactive=true` | Authenticated |
 | `POST /teams` | Create a team | Admin |
 | `GET /teams/{teamId}` | Read a team | Authorized viewer |
 | `PATCH /teams/{teamId}` | Change team presentation or status | Admin |
@@ -89,7 +89,7 @@ Team images are sent as raw PNG, JPEG, or WebP request bodies, are limited to
 
 | Method and path | Purpose | Access |
 | --- | --- | --- |
-| `GET /scoreboards` | List scoreboards visible to the session | Authenticated |
+| `GET /scoreboards` | List active scoreboards; admins can request `includeInactive=true` | Authenticated |
 | `POST /scoreboards` | Create a scoreboard | Admin |
 | `GET /scoreboards/{scoreboardId}` | Read configuration and active period summary | Authorized viewer |
 | `PATCH /scoreboards/{scoreboardId}` | Change name, description, or status | Admin |

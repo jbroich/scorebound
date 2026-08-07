@@ -51,6 +51,16 @@ public class AccountController {
 				.body(TemporaryAccountResponse.from(created.account(), created.temporaryPassword()));
 	}
 
+	@GetMapping
+	public List<AccountResponse> listAccounts() {
+		return accountService.listAccounts().stream().map(this::response).toList();
+	}
+
+	@GetMapping("/{accountId}")
+	public AccountResponse getAccount(@PathVariable UUID accountId) {
+		return response(accountService.requireAccount(accountId));
+	}
+
 	@PostMapping("/{accountId}/temporary-password")
 	public TemporaryPasswordResponse issueTemporaryPassword(@PathVariable UUID accountId,
 			@AuthenticationPrincipal ScoreboundPrincipal actor) {
@@ -62,17 +72,23 @@ public class AccountController {
 	public AccountResponse updateAccount(@PathVariable UUID accountId,
 			@RequestBody JsonNode request,
 			@AuthenticationPrincipal ScoreboundPrincipal actor) {
-		if (!request.isObject() || request.size() != 1 || !request.has("memberId")) {
-			throw new IllegalArgumentException("Only memberId can be changed by this endpoint yet");
+		if (!request.isObject() || request.isEmpty()) {
+			throw new IllegalArgumentException("At least one account field is required");
 		}
-		JsonNode memberNode = request.get("memberId");
-		UUID memberId;
-		try {
-			memberId = memberNode.isNull() ? null : UUID.fromString(memberNode.asText());
-		} catch (IllegalArgumentException exception) {
-			throw new IllegalArgumentException("memberId must be a UUID or null", exception);
+		int knownFields = (request.has("enabled") ? 1 : 0) + (request.has("roles") ? 1 : 0)
+				+ (request.has("preferredLocale") ? 1 : 0) + (request.has("memberId") ? 1 : 0);
+		if (knownFields != request.size()) {
+			throw new IllegalArgumentException("Unknown account field");
 		}
-		return AccountResponse.from(accountService.changeMemberLink(accountId, memberId,
+		Boolean enabled = request.has("enabled") ? requireBoolean(request.get("enabled"), "enabled")
+				: null;
+		Set<Role> roles = request.has("roles") ? requireRoles(request.get("roles")) : null;
+		String preferredLocale = request.has("preferredLocale")
+				? nullableText(request.get("preferredLocale"), "preferredLocale") : null;
+		UUID memberId = request.has("memberId") ? nullableUuid(request.get("memberId"), "memberId")
+				: null;
+		return response(accountService.updateAdministration(accountId, enabled, roles,
+				preferredLocale, request.has("preferredLocale"), memberId, request.has("memberId"),
 				actor.accountId()));
 	}
 
@@ -117,13 +133,52 @@ public class AccountController {
 	}
 
 	public record AccountResponse(String id, String username, String memberId, Set<Role> roles,
-			boolean enabled, boolean mustChangePassword, String preferredLocale) {
+			boolean enabled, boolean mustChangePassword, String preferredLocale,
+			List<UUID> scorerAssignments) {
 
-		static AccountResponse from(Account account) {
-			return new AccountResponse(account.getId().toString(), account.getUsername(),
-					account.getMemberId() == null ? null : account.getMemberId().toString(),
-					account.getRoles(), account.isEnabled(), account.isMustChangePassword(),
-					account.getPreferredLocale());
+	}
+
+	private AccountResponse response(Account account) {
+		return new AccountResponse(account.getId().toString(), account.getUsername(),
+				account.getMemberId() == null ? null : account.getMemberId().toString(),
+				account.getRoles(), account.isEnabled(), account.isMustChangePassword(),
+				account.getPreferredLocale(), scoringService.listScorerAssignments(account.getId()));
+	}
+
+	private static Boolean requireBoolean(JsonNode node, String field) {
+		if (!node.isBoolean()) {
+			throw new IllegalArgumentException(field + " must be a boolean");
+		}
+		return node.asBoolean();
+	}
+
+	private static Set<Role> requireRoles(JsonNode node) {
+		if (!node.isArray() || node.isEmpty()) {
+			throw new IllegalArgumentException("roles must be a non-empty array");
+		}
+		java.util.LinkedHashSet<Role> roles = new java.util.LinkedHashSet<>();
+		node.forEach(role -> roles.add(Role.fromApiName(role.asText())));
+		return Set.copyOf(roles);
+	}
+
+	private static String nullableText(JsonNode node, String field) {
+		if (node.isNull()) {
+			return null;
+		}
+		if (!node.isString()) {
+			throw new IllegalArgumentException(field + " must be a string or null");
+		}
+		return node.asText();
+	}
+
+	private static UUID nullableUuid(JsonNode node, String field) {
+		if (node.isNull()) {
+			return null;
+		}
+		try {
+			return UUID.fromString(node.asText());
+		} catch (IllegalArgumentException exception) {
+			throw new IllegalArgumentException(field + " must be a UUID or null", exception);
 		}
 	}
 }

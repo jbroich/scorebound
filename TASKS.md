@@ -29,7 +29,7 @@ have been created.
 7. [x] `feat: record and cancel score transactions`
    - Credit or debit a team or member with a required reason.
    - Preserve an auditable, visible cancellation trail.
-8. [ ] `feat: build the responsive management interface`
+8. [x] `feat: build the responsive management interface`
    - Optimize score entry for desktop and smartphone use.
    - Provide accessible administration for accounts, teams, and scoreboards.
 9. [ ] `feat: publish score changes in real time`
