@@ -45,6 +45,12 @@ public class CompetitionService {
 	}
 
 	@Transactional(readOnly = true)
+	public List<Scoreboard> listScoreboards(boolean includeInactive) {
+		return includeInactive ? scoreboardRepository.findAllByOrderByNameAsc()
+				: listActiveScoreboards();
+	}
+
+	@Transactional(readOnly = true)
 	public Scoreboard requireScoreboard(UUID scoreboardId) {
 		return scoreboardRepository.findById(scoreboardId)
 				.orElseThrow(() -> notFound("Scoreboard does not exist"));

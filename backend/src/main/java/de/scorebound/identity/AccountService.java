@@ -101,6 +101,44 @@ public class AccountService {
 				.orElseThrow(() -> new IllegalArgumentException("Account does not exist"));
 	}
 
+	@Transactional(readOnly = true)
+	public java.util.List<Account> listAccounts() {
+		return accountRepository.findAllByOrderByUsernameAsc();
+	}
+
+	@Transactional
+	public Account updateAdministration(UUID accountId, Boolean enabled, Set<Role> roles,
+			String preferredLocale, boolean preferredLocalePresent, UUID memberId,
+			boolean memberIdPresent, UUID actorId) {
+		Account account = requireAccount(accountId);
+		if (roles != null) {
+			validateRoles(roles);
+		}
+		if (preferredLocalePresent) {
+			validateLocale(preferredLocale);
+		}
+		if (memberIdPresent && memberId != null) {
+			if (!memberRepository.existsById(memberId)) {
+				throw new ApiException(HttpStatus.NOT_FOUND, "resource_not_found",
+						"Member does not exist");
+			}
+			if (accountRepository.existsByMemberIdAndIdNot(memberId, accountId)) {
+				throw new ApiException(HttpStatus.CONFLICT, "member_already_linked",
+						"Member is already linked to another account");
+			}
+		}
+		boolean removesOwnAdminAccess = accountId.equals(actorId)
+				&& ((enabled != null && !enabled)
+						|| (roles != null && !roles.contains(Role.ADMIN)));
+		if (removesOwnAdminAccess) {
+			throw new ApiException(HttpStatus.CONFLICT, "cannot_remove_own_admin_access",
+					"Administrators cannot remove their own access");
+		}
+		account.updateAdministration(enabled, roles, preferredLocale, preferredLocalePresent,
+				memberId, memberIdPresent, actorId);
+		return account;
+	}
+
 	public static String normalizeUsername(String username) {
 		if (username == null || !USERNAME_PATTERN.matcher(username.trim()).matches()) {
 			throw new IllegalArgumentException("Username must contain 3 to 64 letters, numbers, dots, dashes, or underscores");

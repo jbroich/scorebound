@@ -100,6 +100,24 @@ public class Account {
 		this.modifiedBy = actorId;
 	}
 
+	public void updateAdministration(Boolean enabled, Set<Role> roles, String preferredLocale,
+			boolean preferredLocalePresent, UUID memberId, boolean memberIdPresent, UUID actorId) {
+		if (enabled != null) {
+			this.enabled = enabled;
+		}
+		if (roles != null) {
+			this.roles = new LinkedHashSet<>(roles);
+		}
+		if (preferredLocalePresent) {
+			this.preferredLocale = preferredLocale;
+		}
+		if (memberIdPresent) {
+			this.memberId = memberId;
+		}
+		this.modifiedAt = Instant.now();
+		this.modifiedBy = actorId;
+	}
+
 	public UUID getId() {
 		return id;
 	}

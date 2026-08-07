@@ -14,6 +14,8 @@ public interface ScoreboardRepository extends JpaRepository<Scoreboard, UUID> {
 
 	List<Scoreboard> findByActiveTrueOrderByNameAsc();
 
+	List<Scoreboard> findAllByOrderByNameAsc();
+
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select scoreboard from Scoreboard scoreboard where scoreboard.id = :scoreboardId")
 	Optional<Scoreboard> findByIdForUpdate(@Param("scoreboardId") UUID scoreboardId);

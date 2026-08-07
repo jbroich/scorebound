@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
@@ -39,8 +40,13 @@ public class TeamController {
 	}
 
 	@GetMapping
-	public List<TeamResponse> listTeams() {
-		return teamMemberService.listActiveTeams().stream().map(this::response).toList();
+	public List<TeamResponse> listTeams(@RequestParam(defaultValue = "false") boolean includeInactive,
+			@AuthenticationPrincipal ScoreboundPrincipal principal) {
+		if (includeInactive && !principal.roles().contains(de.scorebound.identity.Role.ADMIN)) {
+			throw new ApiException(org.springframework.http.HttpStatus.FORBIDDEN, "forbidden",
+					"Only administrators can include inactive teams");
+		}
+		return teamMemberService.listTeams(includeInactive).stream().map(this::response).toList();
 	}
 
 	@PostMapping

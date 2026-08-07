@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.net.URI;
 import java.time.Instant;
@@ -43,8 +44,15 @@ public class ScoreboardController {
 	}
 
 	@GetMapping
-	public List<ScoreboardSummaryResponse> listScoreboards() {
-		return competitionService.listActiveScoreboards().stream().map(this::summaryResponse).toList();
+	public List<ScoreboardSummaryResponse> listScoreboards(
+			@RequestParam(defaultValue = "false") boolean includeInactive,
+			@AuthenticationPrincipal ScoreboundPrincipal principal) {
+		if (includeInactive && !principal.roles().contains(de.scorebound.identity.Role.ADMIN)) {
+			throw new ApiException(org.springframework.http.HttpStatus.FORBIDDEN, "forbidden",
+					"Only administrators can include inactive scoreboards");
+		}
+		return competitionService.listScoreboards(includeInactive).stream()
+				.map(this::summaryResponse).toList();
 	}
 
 	@PostMapping
