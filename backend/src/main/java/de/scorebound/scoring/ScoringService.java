@@ -9,6 +9,8 @@ import de.scorebound.competition.ScoreboardRepository;
 import de.scorebound.identity.Account;
 import de.scorebound.identity.AccountRepository;
 import de.scorebound.identity.Role;
+import de.scorebound.live.ScoreboardEventPublisher;
+import de.scorebound.live.ScoreboardEventType;
 import de.scorebound.teams.Member;
 import de.scorebound.teams.MemberRepository;
 import de.scorebound.teams.Membership;
@@ -40,6 +42,7 @@ public class ScoringService {
 	private final ScorerAssignmentRepository assignmentRepository;
 	private final ScoreTransactionRepository transactionRepository;
 	private final ScoreCancellationRepository cancellationRepository;
+	private final ScoreboardEventPublisher eventPublisher;
 
 	public ScoringService(ScoreboardRepository scoreboardRepository,
 			CompetitionPeriodRepository periodRepository,
@@ -47,7 +50,8 @@ public class ScoringService {
 			MembershipRepository membershipRepository, AccountRepository accountRepository,
 			ScorerAssignmentRepository assignmentRepository,
 			ScoreTransactionRepository transactionRepository,
-			ScoreCancellationRepository cancellationRepository) {
+			ScoreCancellationRepository cancellationRepository,
+			ScoreboardEventPublisher eventPublisher) {
 		this.scoreboardRepository = scoreboardRepository;
 		this.periodRepository = periodRepository;
 		this.participantRepository = participantRepository;
@@ -57,6 +61,7 @@ public class ScoringService {
 		this.assignmentRepository = assignmentRepository;
 		this.transactionRepository = transactionRepository;
 		this.cancellationRepository = cancellationRepository;
+		this.eventPublisher = eventPublisher;
 	}
 
 	@Transactional
@@ -137,6 +142,7 @@ public class ScoringService {
 				period.getId(), resolvedTeamId, memberId, kind, amount, updatedScore, normalizedReason,
 				actorId, normalizedKey));
 		participant.adjustScore(adjustment);
+		eventPublisher.publishAfterCommit(scoreboardId, ScoreboardEventType.SCORE_CREATED);
 		return new TransactionDetails(transaction, null, updatedScore);
 	}
 
@@ -183,6 +189,7 @@ public class ScoringService {
 		ScoreCancellation cancellation = cancellationRepository.save(
 				ScoreCancellation.create(transactionId, normalizedReason, actorId));
 		participant.adjustScore(reversal);
+		eventPublisher.publishAfterCommit(scoreboardId, ScoreboardEventType.SCORE_CANCELLED);
 		return new TransactionDetails(transaction, cancellation, updatedScore);
 	}
 
