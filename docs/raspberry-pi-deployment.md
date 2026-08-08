@@ -44,11 +44,45 @@ Compose port bound to `127.0.0.1` unless another trusted local reverse proxy
 needs access. Browser traffic remains HTTPS through Cloudflare while the local
 tunnel-to-container hop stays private on the Pi.
 
-## Upgrade procedure
+## Automated upgrades
+
+Production upgrades run through `.github/workflows/deploy-production.yml`. The
+workflow starts only when the `CI` workflow for `main` completes successfully.
+It checks out that exact commit SHA on a dedicated ARM64 self-hosted runner,
+builds both images with the immutable SHA tag, replaces the Compose services,
+and waits for the database, API, web container, and local HTTP entry point to
+become healthy.
+
+## Self-hosted runner setup
+
+1. Create a dedicated unprivileged Linux account on the Raspberry Pi and add it
+   to the Docker group. Install `git`, `curl`, Docker Engine, and the Compose
+   plugin.
+2. Register a repository-level GitHub Actions runner with the labels
+   `self-hosted`, `linux`, `ARM64`, and `scorebound-production`. Do not reuse it
+   for pull-request jobs or other repositories.
+3. Store the populated runtime environment outside the checkout:
+
+   ```sh
+   sudo install -d -m 0750 -o scorebound -g scorebound /etc/scorebound
+   sudo install -m 0600 -o scorebound -g scorebound .env /etc/scorebound/scorebound.env
+   sudo install -d -m 0750 -o scorebound -g scorebound /var/lib/scorebound/deployments
+   ```
+
+4. Create a protected GitHub environment named `production`. The workflow does
+   not need repository secrets because database and bootstrap credentials stay
+   solely in `/etc/scorebound/scorebound.env` on the Pi.
+5. Start the runner as a system service. The next successful `main` CI run will
+   deploy automatically; no staging environment is involved.
+
+The deployment retains commit-tagged images and a copy of each release's
+Compose definition. It never prints the runtime environment file.
+
+## Manual upgrade fallback
 
 1. Confirm that the target revision has green GitHub checks.
 2. Record the currently deployed commit with `git rev-parse HEAD`.
-3. Fetch and switch to the desired release or `main` revision.
+3. Fetch and switch to the desired `main` revision.
 4. Build before replacing running containers:
 
    ```sh
@@ -60,6 +94,21 @@ tunnel-to-container hop stays private on the Pi.
 5. Check `/healthz`, then confirm login and the wall-display route through the
    public hostname.
 
-Flyway applies database migrations when the API starts. A code rollback across
-an incompatible migration requires a database restore and is therefore not an
-automatic operation.
+## Rollback
+
+If a new deployment does not become healthy, the deployment script
+automatically attempts to restore the previously recorded image tag. To trigger
+the same rollback manually as the runner account:
+
+```sh
+cd /path/to/the/scorebound/runner/checkout
+SCOREBOUND_ENV_FILE=/etc/scorebound/scorebound.env \
+SCOREBOUND_STATE_DIR=/var/lib/scorebound/deployments \
+bash scripts/rollback-production.sh
+```
+
+The rollback uses `--no-build`, verifies `/healthz`, and swaps the recorded
+current/previous releases only after health succeeds. Flyway applies database
+migrations when the API starts; the automated rollback deliberately does not
+modify or restore the PostgreSQL volume. A code rollback across an incompatible
+migration therefore requires a separate database restore.

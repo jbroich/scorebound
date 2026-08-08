@@ -1,0 +1,44 @@
+name: Deploy production
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scorebound-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy verified main revision
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on:
+      - self-hosted
+      - linux
+      - ARM64
+      - scorebound-production
+    timeout-minutes: 30
+    environment: production
+    steps:
+      - name: Check out the verified revision
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - name: Deploy immutable commit images
+        env:
+          SCOREBOUND_RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+          SCOREBOUND_ENV_FILE: /etc/scorebound/scorebound.env
+          SCOREBOUND_STATE_DIR: /var/lib/scorebound/deployments
+        run: bash scripts/deploy-production.sh

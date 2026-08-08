@@ -85,6 +85,8 @@ jobs:
         uses: actions/checkout@v6
       - name: Validate Compose configuration
         run: docker compose config --quiet
+      - name: Validate deployment scripts
+        run: bash -n scripts/deploy-production.sh scripts/rollback-production.sh
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
