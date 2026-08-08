@@ -141,6 +141,18 @@ class CompetitionIntegrationTests {
 				.andExpect(jsonPath("$.participants[0].winner").value(true))
 				.andExpect(jsonPath("$.participants[1].winner").value(true));
 
+		mockMvc.perform(get("/api/v1/scoreboards/{scoreboardId}/periods",
+					firstScoreboardId).session(adminSession))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].id").value(periodId))
+				.andExpect(jsonPath("$[0].status").value("Closed"));
+		mockMvc.perform(get("/api/v1/scoreboards/{scoreboardId}/periods/{periodId}",
+					firstScoreboardId, periodId).session(adminSession))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.participants.length()").value(2))
+				.andExpect(jsonPath("$.participants[0].winner").value(true))
+				.andExpect(jsonPath("$.participants[1].winner").value(true));
+
 		mockMvc.perform(put("/api/v1/scoreboards/{scoreboardId}/periods/{periodId}/teams/{teamId}",
 					firstScoreboardId, periodId, redTeamId).session(adminSession).with(csrf()))
 				.andExpect(status().isConflict())

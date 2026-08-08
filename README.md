@@ -105,4 +105,10 @@ npm ci
 npm test
 npm run lint
 npm run build
+npx playwright install chromium
+npm run test:e2e
 ```
+
+Die Playwright-Suite startet ihren eigenen lokalen Vite-Server und prueft die
+kritischen Smartphone- und Landscape-Display-Ablaufe in Chromium. Der Browser
+muss pro Entwicklungsumgebung nur einmal installiert werden.

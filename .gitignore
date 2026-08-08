@@ -24,6 +24,8 @@ frontend/*.tsbuildinfo
 # Test and coverage output
 coverage/
 test-results/
+frontend/playwright-report/
+frontend/blob-report/
 
 # Repository automation
 !.github/

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "vitest run",
+    "test": "vitest run src",
+    "test:e2e": "playwright test",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -15,6 +16,7 @@
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",

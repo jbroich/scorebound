@@ -76,6 +76,10 @@ jobs:
         run: npm test
       - name: Build frontend
         run: npm run build
+      - name: Install browser for end-to-end tests
+        run: npx playwright install --with-deps chromium
+      - name: Run end-to-end journeys
+        run: npm run test:e2e
 
   packaging:
     name: ARM64 container build

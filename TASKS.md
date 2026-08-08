@@ -49,7 +49,7 @@ have been created.
 13. [x] `cd: deploy main to the Raspberry Pi`
     - Deploy only after successful CI through a self-hosted GitHub runner.
     - Provide rollback and deployment health checks.
-14. [ ] `test: cover the MVP user journeys`
+14. [x] `test: cover the MVP user journeys`
     - Cover permissions, scoring invariants, period lifecycle, responsive score
       entry, and display updates.
     - Verify keyboard operation and reduced-motion behavior.
