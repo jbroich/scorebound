@@ -46,7 +46,7 @@ have been created.
 12. [x] `infra: package Scorebound for ARM64 with Docker Compose`
     - Expose the web app through one local HTTP port for Cloudflare Tunnel.
     - Keep configuration and secrets outside the images.
-13. [ ] `cd: deploy main to the Raspberry Pi`
+13. [x] `cd: deploy main to the Raspberry Pi`
     - Deploy only after successful CI through a self-hosted GitHub runner.
     - Provide rollback and deployment health checks.
 14. [ ] `test: cover the MVP user journeys`
