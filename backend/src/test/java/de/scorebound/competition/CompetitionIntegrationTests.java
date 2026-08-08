@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -177,6 +178,29 @@ class CompetitionIntegrationTests {
 		mockMvc.perform(post("/api/v1/scoreboards").session(viewerSession).with(csrf())
 					.contentType(APPLICATION_JSON).content("{\"name\":\"Forbidden\"}"))
 				.andExpect(status().isForbidden());
+	}
+
+	@Test
+	void requiresAuthenticationForLiveEventsAndStartsWithSnapshot() throws Exception {
+		String scoreboardId = createScoreboard("Live League");
+
+		mockMvc.perform(get("/api/v1/scoreboards/{scoreboardId}/events", scoreboardId))
+				.andExpect(status().isUnauthorized());
+
+		MvcResult stream = mockMvc.perform(get(
+				"/api/v1/scoreboards/{scoreboardId}/events", scoreboardId)
+						.session(adminSession))
+				.andExpect(status().isOk())
+				.andExpect(request().asyncStarted())
+				.andReturn();
+		assertThat(stream.getResponse().getContentAsString())
+				.contains("event:snapshot", "\"scoreboardId\":\"" + scoreboardId + "\"");
+
+		String teamId = createTeam("Live Team", "LIVE", "#123456");
+		selectTeam(scoreboardId, teamId);
+		assertThat(stream.getResponse().getContentAsString())
+				.contains("event:participation-changed");
+		stream.getRequest().getAsyncContext().complete();
 	}
 
 	@Test

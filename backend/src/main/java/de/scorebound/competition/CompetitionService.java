@@ -1,5 +1,7 @@
 package de.scorebound.competition;
 
+import de.scorebound.live.ScoreboardEventPublisher;
+import de.scorebound.live.ScoreboardEventType;
 import de.scorebound.teams.Team;
 import de.scorebound.teams.TeamRepository;
 import de.scorebound.web.ApiException;
@@ -21,16 +23,19 @@ public class CompetitionService {
 	private final CompetitionPeriodRepository periodRepository;
 	private final PeriodParticipantRepository participantRepository;
 	private final TeamRepository teamRepository;
+	private final ScoreboardEventPublisher eventPublisher;
 
 	public CompetitionService(ScoreboardRepository scoreboardRepository,
 			ScoreboardTeamRepository scoreboardTeamRepository,
 			CompetitionPeriodRepository periodRepository,
-			PeriodParticipantRepository participantRepository, TeamRepository teamRepository) {
+			PeriodParticipantRepository participantRepository, TeamRepository teamRepository,
+			ScoreboardEventPublisher eventPublisher) {
 		this.scoreboardRepository = scoreboardRepository;
 		this.scoreboardTeamRepository = scoreboardTeamRepository;
 		this.periodRepository = periodRepository;
 		this.participantRepository = participantRepository;
 		this.teamRepository = teamRepository;
+		this.eventPublisher = eventPublisher;
 	}
 
 	@Transactional
@@ -82,9 +87,12 @@ public class CompetitionService {
 		if (!team.isActive()) {
 			throw validation("Inactive teams cannot be selected for future periods");
 		}
-		return scoreboardTeamRepository.findById(new ScoreboardTeam.Key(scoreboardId, teamId))
+		ScoreboardTeam selection = scoreboardTeamRepository
+				.findById(new ScoreboardTeam.Key(scoreboardId, teamId))
 				.orElseGet(() -> scoreboardTeamRepository.save(ScoreboardTeam.create(scoreboardId,
 						teamId, scoreboardTeamRepository.maximumPosition(scoreboardId) + 1, actorId)));
+		eventPublisher.publishAfterCommit(scoreboardId, ScoreboardEventType.PARTICIPATION_CHANGED);
+		return selection;
 	}
 
 	@Transactional
@@ -92,6 +100,7 @@ public class CompetitionService {
 		scoreboardRepository.findByIdForUpdate(scoreboardId)
 				.orElseThrow(() -> notFound("Scoreboard does not exist"));
 		scoreboardTeamRepository.deleteByScoreboardIdAndTeamId(scoreboardId, teamId);
+		eventPublisher.publishAfterCommit(scoreboardId, ScoreboardEventType.PARTICIPATION_CHANGED);
 	}
 
 	@Transactional
@@ -105,8 +114,10 @@ public class CompetitionService {
 		if (periodRepository.hasOverlap(scoreboardId, startsAt, endsAt)) {
 			throw conflict("period_overlap", "Competition periods cannot overlap");
 		}
-		return periodRepository.save(CompetitionPeriod.schedule(scoreboardId,
+		CompetitionPeriod period = periodRepository.save(CompetitionPeriod.schedule(scoreboardId,
 				requiredText(name, 100, "Period name"), startsAt, endsAt, actorId));
+		eventPublisher.publishAfterCommit(scoreboardId, ScoreboardEventType.PERIOD_CHANGED);
+		return period;
 	}
 
 	@Transactional(readOnly = true)
@@ -127,6 +138,8 @@ public class CompetitionService {
 				.orElseThrow(() -> notFound("Scoreboard does not exist"));
 		CompetitionPeriod period = requirePeriodForUpdate(scoreboardId, periodId);
 		activateInternal(scoreboard, period, actorId);
+		eventPublisher.publishAfterCommit(scoreboardId, ScoreboardEventType.PERIOD_CHANGED);
+		eventPublisher.publishAfterCommit(scoreboardId, ScoreboardEventType.PARTICIPATION_CHANGED);
 		return new PeriodDetails(period, rankedParticipants(period));
 	}
 
@@ -136,6 +149,7 @@ public class CompetitionService {
 				.orElseThrow(() -> notFound("Scoreboard does not exist"));
 		CompetitionPeriod period = requirePeriodForUpdate(scoreboardId, periodId);
 		closeInternal(period, Instant.now(), actorId);
+		eventPublisher.publishAfterCommit(scoreboardId, ScoreboardEventType.PERIOD_CHANGED);
 		return new PeriodDetails(period, rankedParticipants(period));
 	}
 
@@ -151,6 +165,7 @@ public class CompetitionService {
 		period.reopen(Instant.now(), actorId);
 		participantRepository.findByPeriodIdOrderByPositionAsc(periodId)
 				.forEach(participant -> participant.markWinner(false));
+		eventPublisher.publishAfterCommit(scoreboardId, ScoreboardEventType.PERIOD_CHANGED);
 		return new PeriodDetails(period, rankedParticipants(period));
 	}
 
@@ -167,9 +182,11 @@ public class CompetitionService {
 			throw validation("Team must be selected on the scoreboard first");
 		}
 		requireActiveTeam(teamId);
-		return participantRepository.findByPeriodIdAndTeamId(periodId, teamId)
+		PeriodParticipant participant = participantRepository.findByPeriodIdAndTeamId(periodId, teamId)
 				.orElseGet(() -> participantRepository.save(PeriodParticipant.create(periodId, teamId,
 						participantRepository.maximumPosition(periodId) + 1, actorId)));
+		eventPublisher.publishAfterCommit(scoreboardId, ScoreboardEventType.PARTICIPATION_CHANGED);
+		return participant;
 	}
 
 	@Transactional
@@ -182,6 +199,8 @@ public class CompetitionService {
 				CompetitionPeriod period = periodRepository.findByIdForUpdate(candidate.getId()).orElseThrow();
 				if (period.getStatus() == PeriodStatus.ACTIVE && period.getReopenedAt() == null) {
 					closeInternal(period, now, null);
+					eventPublisher.publishAfterCommit(period.getScoreboardId(),
+							ScoreboardEventType.PERIOD_CHANGED);
 				}
 			});
 		}
@@ -198,8 +217,14 @@ public class CompetitionService {
 			CompetitionPeriod period = periodRepository.findByIdForUpdate(candidate.getId()).orElseThrow();
 			if (period.getStatus() == PeriodStatus.SCHEDULED) {
 				activateInternal(scoreboard, period, null);
+				eventPublisher.publishAfterCommit(scoreboard.getId(),
+						ScoreboardEventType.PERIOD_CHANGED);
+				eventPublisher.publishAfterCommit(scoreboard.getId(),
+						ScoreboardEventType.PARTICIPATION_CHANGED);
 				if (!period.getEndsAt().isAfter(now)) {
 					closeInternal(period, now, null);
+					eventPublisher.publishAfterCommit(scoreboard.getId(),
+							ScoreboardEventType.PERIOD_CHANGED);
 				}
 			}
 		}

@@ -137,20 +137,22 @@ authority for rank and score calculations.
 
 ## Live events
 
-`GET /scoreboards/{scoreboardId}/events` returns an authorized
-`text/event-stream`. Event types are:
+`GET /scoreboards/{scoreboardId}/events` returns an authenticated
+`text/event-stream`. Every connection starts with a `snapshot` reconciliation
+signal, including reconnects after a network interruption. Further event types
+are:
 
-- `snapshot` with current period, standings, visual ceiling, and recent activity
 - `score-created`
 - `score-cancelled`
 - `period-changed`
 - `participation-changed`
 
-Every event has a monotonically ordered event ID. Clients send `Last-Event-ID`
-when reconnecting. If the requested event is no longer retained, the server
-sends a fresh `snapshot`. Events are hints for presentation; clients replace
-their state from the authoritative payload rather than independently adding or
-subtracting scores.
+Every event has a monotonically ordered event ID and a scoreboard ID. Events are
+invalidation hints: on receipt, clients reload standings and recent activity
+from the authoritative JSON endpoints. They never add or subtract points from
+event payloads. This makes duplicate delivery harmless and lets a reconnecting
+client recover without relying on retained event history. Heartbeat comments
+keep otherwise idle proxy connections alive.
 
 ## Display configuration
 

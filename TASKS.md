@@ -32,7 +32,7 @@ have been created.
 8. [x] `feat: build the responsive management interface`
    - Optimize score entry for desktop and smartphone use.
    - Provide accessible administration for accounts, teams, and scoreboards.
-9. [ ] `feat: publish score changes in real time`
+9. [x] `feat: publish score changes in real time`
    - Update connected displays without page reloads.
    - Recover cleanly after temporary connection loss.
 10. [ ] `feat: create the animated wall display`
