@@ -1,6 +1,8 @@
-import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, ApiError, type Member, type ScoreboardSummary, type Standings, type TransactionPage } from '../api/client'
 import { useLocale } from '../i18n/useLocale'
+import { ReconciliationGate } from '../live/ReconciliationGate'
+import { subscribeToScoreboard } from '../live/scoreboardEvents'
 import { Feedback } from '../ui/Feedback'
 import { uiText } from '../ui/text'
 
@@ -23,6 +25,7 @@ export function ScorePage({ csrf, canScore, accountId, isAdmin }: Props) {
   const [cancelReason, setCancelReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const reconciliation = useRef(new ReconciliationGate())
 
   useEffect(() => {
     Promise.all([api.scoreboards(), api.members()]).then(([boards, memberPage]) => {
@@ -35,9 +38,11 @@ export function ScorePage({ csrf, canScore, accountId, isAdmin }: Props) {
   const refresh = useCallback(async (boardId: string) => {
     if (!boardId) return
     try {
-      const [nextStandings, nextTransactions] = await Promise.all([
+      const result = await reconciliation.current.run(() => Promise.all([
         api.standings(boardId), api.transactions(boardId),
-      ])
+      ]))
+      if (!result.current) return
+      const [nextStandings, nextTransactions] = result.value
       setStandings(nextStandings)
       setTransactions(nextTransactions)
       setTargetId((current) => current || nextStandings.standings[0]?.teamId || '')
@@ -50,6 +55,11 @@ export function ScorePage({ csrf, canScore, accountId, isAdmin }: Props) {
   }, [text.error, text.noActivePeriod])
 
   useEffect(() => { void refresh(scoreboardId) }, [refresh, scoreboardId])
+
+  useEffect(() => {
+    if (!scoreboardId) return undefined
+    return subscribeToScoreboard(scoreboardId, () => { void refresh(scoreboardId) })
+  }, [refresh, scoreboardId])
 
   const eligibleMembers = useMemo(() => {
     const teams = new Set(standings?.standings.map((standing) => standing.teamId) ?? [])
