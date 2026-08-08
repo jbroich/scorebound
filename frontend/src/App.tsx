@@ -4,6 +4,7 @@ import { AuthProvider } from './auth/AuthProvider'
 import { LoginPage } from './auth/LoginPage'
 import { PasswordChangePage } from './auth/PasswordChangePage'
 import { useAuth } from './auth/useAuth'
+import { WallDisplay } from './display/WallDisplay'
 import { LocaleProvider } from './i18n/LocaleProvider'
 import { useLocale } from './i18n/useLocale'
 import { AccountsPage } from './management/AccountsPage'
@@ -55,16 +56,6 @@ function ManagementApp() {
   </main>
 }
 
-function DisplaySurface() {
-  const { logout } = useAuth(); const { locale, formatDateTime } = useLocale(); const text = uiText(locale)
-  const [now, setNow] = useState(new Date())
-  useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 30_000); return () => window.clearInterval(timer) }, [])
-  return <main className="display-shell"><header className="display-header"><Brand /><div className="display-header__actions"><LanguageSwitcher compact /><a className="text-link" href="/">{text.back}</a><button className="button button--ghost" onClick={logout}>{text.logout}</button></div></header>
-    <section className="display-stage"><div className="display-stage__glow" aria-hidden="true" /><p className="eyebrow">{text.display}</p><h1>{locale === 'de' ? 'Die Arena macht sich bereit.' : 'The arena is getting ready.'}</h1>
-      <p>{locale === 'de' ? 'Die animierte Punkteanzeige folgt als eigenes Ticket.' : 'The animated scoreboard follows in its dedicated issue.'}</p><div className="display-status" role="status"><span className="display-status__dot" />API connected</div></section>
-    <footer className="display-footer"><span>Scorebound display</span><time>{formatDateTime(now)}</time></footer></main>
-}
-
 function AuthenticatedApp() {
   const { session, loading } = useAuth()
   const display = window.location.pathname.replace(/\/+$/, '') === '/display'
@@ -72,7 +63,7 @@ function AuthenticatedApp() {
   if (loading) return <LoadingScreen />
   if (!session) return <LoginPage displayMode={display} />
   if (session.mustChangePassword) return <PasswordChangePage />
-  return display ? <DisplaySurface /> : <ManagementApp />
+  return display ? <WallDisplay /> : <ManagementApp />
 }
 
 export default function App() {

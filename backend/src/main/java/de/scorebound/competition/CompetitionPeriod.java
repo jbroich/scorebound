@@ -89,6 +89,27 @@ public class CompetitionPeriod {
 		}
 		status = PeriodStatus.ACTIVE;
 		activeScoreboardKey = scoreboardId;
+		visualCeiling = Math.max(visualCeiling, 100);
+	}
+
+	public void includeScore(long score) {
+		if (score <= 0 || visualCeiling == Integer.MAX_VALUE) {
+			return;
+		}
+		long target = Math.max(100, score + Math.max(25, (score + 4) / 5));
+		long magnitude = 10;
+		while (magnitude <= target / 10 && magnitude <= 100_000_000) {
+			magnitude *= 10;
+		}
+		long[] steps = { magnitude, magnitude * 2, magnitude * 5, magnitude * 10 };
+		for (long step : steps) {
+			if (step >= target) {
+				visualCeiling = (int) Math.max(visualCeiling,
+						Math.min(step, Integer.MAX_VALUE));
+				return;
+			}
+		}
+		visualCeiling = Integer.MAX_VALUE;
 	}
 
 	public void close(Instant closedAt, UUID actorId) {

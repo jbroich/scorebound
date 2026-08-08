@@ -4,6 +4,7 @@ import tools.jackson.databind.JsonNode;
 import de.scorebound.identity.Account;
 import de.scorebound.identity.AccountService;
 import de.scorebound.identity.Role;
+import de.scorebound.display.DisplayConfigurationService;
 import de.scorebound.security.ScoreboundPrincipal;
 import de.scorebound.scoring.ScoringService;
 import jakarta.validation.Valid;
@@ -35,10 +36,13 @@ public class AccountController {
 
 	private final AccountService accountService;
 	private final ScoringService scoringService;
+	private final DisplayConfigurationService displayService;
 
-	public AccountController(AccountService accountService, ScoringService scoringService) {
+	public AccountController(AccountService accountService, ScoringService scoringService,
+			DisplayConfigurationService displayService) {
 		this.accountService = accountService;
 		this.scoringService = scoringService;
+		this.displayService = displayService;
 	}
 
 	@PostMapping
@@ -111,6 +115,25 @@ public class AccountController {
 		return ResponseEntity.noContent().build();
 	}
 
+	@GetMapping("/{accountId}/display-assignments")
+	public List<UUID> listDisplayAssignments(@PathVariable UUID accountId) {
+		return displayService.listAssignmentIds(accountId);
+	}
+
+	@PutMapping("/{accountId}/display-assignments/{scoreboardId}")
+	public ResponseEntity<Void> assignDisplay(@PathVariable UUID accountId,
+			@PathVariable UUID scoreboardId, @AuthenticationPrincipal ScoreboundPrincipal actor) {
+		displayService.assign(accountId, scoreboardId, actor.accountId());
+		return ResponseEntity.noContent().build();
+	}
+
+	@DeleteMapping("/{accountId}/display-assignments/{scoreboardId}")
+	public ResponseEntity<Void> removeDisplayAssignment(@PathVariable UUID accountId,
+			@PathVariable UUID scoreboardId) {
+		displayService.remove(accountId, scoreboardId);
+		return ResponseEntity.noContent().build();
+	}
+
 	public record CreateAccountRequest(
 			@NotBlank @Pattern(regexp = "[A-Za-z0-9._-]{3,64}") String username,
 			@NotEmpty Set<Role> roles,
@@ -134,7 +157,7 @@ public class AccountController {
 
 	public record AccountResponse(String id, String username, String memberId, Set<Role> roles,
 			boolean enabled, boolean mustChangePassword, String preferredLocale,
-			List<UUID> scorerAssignments) {
+			List<UUID> scorerAssignments, List<UUID> displayAssignments) {
 
 	}
 
@@ -142,7 +165,8 @@ public class AccountController {
 		return new AccountResponse(account.getId().toString(), account.getUsername(),
 				account.getMemberId() == null ? null : account.getMemberId().toString(),
 				account.getRoles(), account.isEnabled(), account.isMustChangePassword(),
-				account.getPreferredLocale(), scoringService.listScorerAssignments(account.getId()));
+				account.getPreferredLocale(), scoringService.listScorerAssignments(account.getId()),
+				displayService.listAssignmentIds(account.getId()));
 	}
 
 	private static Boolean requireBoolean(JsonNode node, String field) {

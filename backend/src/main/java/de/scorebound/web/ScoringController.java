@@ -3,6 +3,7 @@ package de.scorebound.web;
 import de.scorebound.competition.CompetitionPeriod;
 import de.scorebound.competition.CompetitionService;
 import de.scorebound.competition.PeriodParticipant;
+import de.scorebound.display.DisplayConfigurationService;
 import de.scorebound.identity.AccountRepository;
 import de.scorebound.scoring.ScoreCancellation;
 import de.scorebound.scoring.ScoreKind;
@@ -19,6 +20,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,20 +46,24 @@ public class ScoringController {
 	private final TeamRepository teamRepository;
 	private final MemberRepository memberRepository;
 	private final AccountRepository accountRepository;
+	private final DisplayConfigurationService displayService;
 
 	public ScoringController(ScoringService scoringService, CompetitionService competitionService,
 			TeamRepository teamRepository, MemberRepository memberRepository,
-			AccountRepository accountRepository) {
+			AccountRepository accountRepository, DisplayConfigurationService displayService) {
 		this.scoringService = scoringService;
 		this.competitionService = competitionService;
 		this.teamRepository = teamRepository;
 		this.memberRepository = memberRepository;
 		this.accountRepository = accountRepository;
+		this.displayService = displayService;
 	}
 
 	@GetMapping("/standings")
 	public StandingsResponse getStandings(@PathVariable UUID scoreboardId,
-			@RequestParam(required = false) UUID periodId) {
+			@RequestParam(required = false) UUID periodId, Authentication authentication,
+			@AuthenticationPrincipal ScoreboundPrincipal principal) {
+		requireDisplayAssignment(scoreboardId, authentication, principal);
 		CompetitionPeriod period = scoringService.resolvePeriod(scoreboardId, periodId);
 		return standingsResponse(competitionService.getPeriodDetails(scoreboardId, period.getId()));
 	}
@@ -66,7 +72,9 @@ public class ScoringController {
 	public TransactionPageResponse listTransactions(@PathVariable UUID scoreboardId,
 			@RequestParam(required = false) UUID periodId,
 			@RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "50") int size) {
+			@RequestParam(defaultValue = "50") int size, Authentication authentication,
+			@AuthenticationPrincipal ScoreboundPrincipal principal) {
+		requireDisplayAssignment(scoreboardId, authentication, principal);
 		ScoringService.TransactionPage result = scoringService.listTransactions(scoreboardId,
 				periodId, page, size);
 		return new TransactionPageResponse(result.period().getId(),
@@ -130,6 +138,16 @@ public class ScoringController {
 		return teamRepository.findById(teamId).orElseThrow(() -> new ApiException(
 				org.springframework.http.HttpStatus.NOT_FOUND, "resource_not_found",
 				"Team does not exist"));
+	}
+
+	private void requireDisplayAssignment(UUID scoreboardId, Authentication authentication,
+			ScoreboundPrincipal principal) {
+		boolean displayOnly = authentication.getAuthorities().stream()
+				.filter(authority -> authority.getAuthority().startsWith("ROLE_"))
+				.allMatch(authority -> authority.getAuthority().equals("ROLE_DISPLAY"));
+		if (displayOnly) {
+			displayService.requireAssigned(principal.accountId(), scoreboardId);
+		}
 	}
 
 	public record ScoreRequest(UUID teamId, UUID memberId, @NotNull ScoreKind kind,

@@ -134,6 +134,15 @@ export type Account = {
   mustChangePassword: boolean
   preferredLocale: 'en' | 'de' | null
   scorerAssignments: string[]
+  displayAssignments: string[]
+}
+
+export type DisplayConfiguration = {
+  mode: 'Fixed' | 'Rotation'
+  fixedScoreboardId: string | null
+  rotationSeconds: number
+  soundEnabled: boolean
+  scoreboards: Array<{ id: string; name: string; description: string | null }>
 }
 
 export type TemporaryAccount = Account & { temporaryPassword: string }
@@ -234,4 +243,9 @@ export const api = {
     request<{ accountId: string; temporaryPassword: string }>(`/accounts/${id}/temporary-password`, { method: 'POST' }, csrf),
   assignScorer: (accountId: string, scoreboardId: string, assigned: boolean, csrf: string | null) =>
     request<void>(`/accounts/${accountId}/scorer-assignments/${scoreboardId}`, { method: assigned ? 'PUT' : 'DELETE' }, csrf),
+  assignDisplay: (accountId: string, scoreboardId: string, assigned: boolean, csrf: string | null) =>
+    request<void>(`/accounts/${accountId}/display-assignments/${scoreboardId}`, { method: assigned ? 'PUT' : 'DELETE' }, csrf),
+  displayConfiguration: () => request<DisplayConfiguration>('/display/configuration'),
+  updateDisplayConfiguration: (body: Omit<DisplayConfiguration, 'scoreboards'>, csrf: string | null) =>
+    request<DisplayConfiguration>('/display/configuration', json('PUT', body), csrf),
 }
