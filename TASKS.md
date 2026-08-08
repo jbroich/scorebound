@@ -35,7 +35,7 @@ have been created.
 9. [x] `feat: publish score changes in real time`
    - Update connected displays without page reloads.
    - Recover cleanly after temporary connection loss.
-10. [ ] `feat: create the animated wall display`
+10. [x] `feat: create the animated wall display`
     - Optimize the layout for a landscape Galaxy Tab S6 Lite.
     - Render adaptive glass containers with proportional colored balls.
     - Support transaction and winner animations, optional sounds, and display

@@ -5,6 +5,8 @@ import de.scorebound.competition.CompetitionPeriodRepository;
 import de.scorebound.competition.PeriodParticipantRepository;
 import de.scorebound.competition.ScoreboardRepository;
 import de.scorebound.competition.ScoreboardTeamRepository;
+import de.scorebound.display.DisplayAssignmentRepository;
+import de.scorebound.display.DisplayConfigurationRepository;
 import de.scorebound.scoring.ScoreCancellationRepository;
 import de.scorebound.scoring.ScoreTransactionRepository;
 import de.scorebound.scoring.ScorerAssignmentRepository;
@@ -29,6 +31,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -50,6 +53,8 @@ class AdministrationIntegrationTests {
 	@Autowired private ScorerAssignmentRepository assignmentRepository;
 	@Autowired private ScoreTransactionRepository transactionRepository;
 	@Autowired private ScoreCancellationRepository cancellationRepository;
+	@Autowired private DisplayAssignmentRepository displayAssignmentRepository;
+	@Autowired private DisplayConfigurationRepository displayConfigurationRepository;
 
 	private MockHttpSession adminSession;
 	private Account admin;
@@ -129,6 +134,45 @@ class AdministrationIntegrationTests {
 				.andExpect(status().isForbidden());
 	}
 
+	@Test
+	void assignsAndConfiguresARestrictedDisplayAccount() throws Exception {
+		String scoreboardId = createScoreboard();
+		String unassignedScoreboardId = createScoreboard();
+		MvcResult created = mockMvc.perform(post("/api/v1/accounts").session(adminSession).with(csrf())
+					.contentType(APPLICATION_JSON)
+					.content("{\"username\":\"wall-display\",\"roles\":[\"Display\"],\"preferredLocale\":\"en\"}"))
+				.andExpect(status().isCreated()).andReturn();
+		String accountId = JsonPath.read(created.getResponse().getContentAsString(), "$.id");
+		String temporaryPassword = JsonPath.read(created.getResponse().getContentAsString(),
+				"$.temporaryPassword");
+		accountService.changePassword(java.util.UUID.fromString(accountId), temporaryPassword,
+				"permanent-display-password");
+
+		mockMvc.perform(put("/api/v1/accounts/{accountId}/display-assignments/{scoreboardId}",
+				accountId, scoreboardId).session(adminSession).with(csrf()))
+				.andExpect(status().isNoContent());
+		mockMvc.perform(get("/api/v1/accounts/{accountId}", accountId).session(adminSession))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.displayAssignments[0]").value(scoreboardId));
+
+		MockHttpSession displaySession = sessionFrom(mockMvc.perform(post("/api/v1/sessions")
+					.contentType(APPLICATION_JSON).content("{\"username\":\"wall-display\","
+							+ "\"password\":\"permanent-display-password\",\"mode\":\"Display\"}"))
+				.andExpect(status().isOk()).andReturn());
+		mockMvc.perform(get("/api/v1/display/configuration").session(displaySession))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.mode").value("Fixed"))
+				.andExpect(jsonPath("$.fixedScoreboardId").value(scoreboardId));
+		mockMvc.perform(put("/api/v1/display/configuration").session(displaySession).with(csrf())
+					.contentType(APPLICATION_JSON).content("{\"mode\":\"Rotation\","
+							+ "\"fixedScoreboardId\":\"" + scoreboardId + "\","
+							+ "\"rotationSeconds\":25,\"soundEnabled\":true}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.soundEnabled").value(true));
+		mockMvc.perform(get("/api/v1/scoreboards/{scoreboardId}/standings",
+				unassignedScoreboardId).session(displaySession)).andExpect(status().isForbidden());
+	}
+
 	private String createTeam() throws Exception {
 		MvcResult result = mockMvc.perform(post("/api/v1/teams").session(adminSession).with(csrf())
 					.contentType(APPLICATION_JSON)
@@ -157,6 +201,8 @@ class AdministrationIntegrationTests {
 	}
 
 	private void cleanDatabase() {
+		displayConfigurationRepository.deleteAll();
+		displayAssignmentRepository.deleteAll();
 		cancellationRepository.deleteAll();
 		transactionRepository.deleteAll();
 		assignmentRepository.deleteAll();

@@ -10,6 +10,6 @@ export function subscribeToScoreboard(scoreboardId: string, reconcile: () => voi
   const source = new EventSource(`/api/v1/scoreboards/${scoreboardId}/events`, {
     withCredentials: true,
   })
-  EVENT_NAMES.forEach((eventName) => source.addEventListener(eventName, reconcile))
+  EVENT_NAMES.forEach((eventName) => source.addEventListener(eventName, () => reconcile()))
   return () => source.close()
 }

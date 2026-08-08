@@ -158,12 +158,13 @@ keep otherwise idle proxy connections alive.
 
 | Method and path | Purpose | Access |
 | --- | --- | --- |
-| `GET /display/configuration` | Read the current display's allowed boards and preferences | Display session or Admin |
-| `PUT /display/configuration` | Select fixed/rotation mode, ordered boards, interval, and sound preference | Display session or Admin |
+| `GET /display/configuration` | Read the current display's assigned boards and preferences | Display session |
+| `PUT /display/configuration` | Select fixed/rotation mode, fixed board, interval, and sound preference | Display session |
 
-The server validates every selected board against the display account's
-assignments. Browser audio still requires one explicit user interaction before
-sound playback begins.
+Admins manage the ordered board assignments on the account resource. The server
+validates the fixed board against those assignments; rotation follows assignment
+order. Browser audio, fullscreen landscape mode, and the screen wake lock still
+require an explicit user interaction.
 
 ## Stable error codes
 

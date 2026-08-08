@@ -84,6 +84,10 @@ umgeschaltet werden. Datums- und Zeitangaben verwenden standardmaessig
 `Europe/Berlin`. Eine andere IANA-Zeitzone kann beim Frontend-Build ueber
 `VITE_SCOREBOUND_TIME_ZONE` gesetzt werden. Die eigenstaendige dunkle
 Display-Oberflaeche ist unter <http://localhost:5173/display> erreichbar.
+Ein Account mit der Rolle `Display` meldet sich dort im langlebigen Display-
+Modus an. Ein Admin ordnet ihm zuvor mindestens ein Scoreboard zu. Ueber die
+Bedienelemente der Wandanzeige lassen sich Fixed-/Rotation-Modus, optionale
+Sounds sowie Vollbild, Querformat und Bildschirm-Wake-Lock aktivieren.
 
 ## Pruefen
 
@@ -98,6 +102,7 @@ cd backend
 
 cd ..\frontend
 npm ci
+npm test
 npm run lint
 npm run build
 ```

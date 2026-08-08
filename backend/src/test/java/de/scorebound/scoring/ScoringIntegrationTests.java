@@ -94,6 +94,9 @@ class ScoringIntegrationTests {
 				.andExpect(jsonPath("$.resultingTeamScore").value(100))
 				.andReturn();
 		String creditId = JsonPath.read(credit.getResponse().getContentAsString(), "$.id");
+		mockMvc.perform(get("/api/v1/scoreboards/{scoreboardId}/standings",
+					competition.scoreboardId()).session(adminSession))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.visualCeiling").value(200));
 
 		MvcResult retry = score(competition.scoreboardId(), adminSession, "credit-1",
 				"{\"teamId\":\"" + redTeamId
@@ -114,6 +117,9 @@ class ScoringIntegrationTests {
 						+ "\",\"kind\":\"Debit\",\"amount\":25,\"reason\":\"Rule reminder\"}")
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.resultingTeamScore").value(75));
+		mockMvc.perform(get("/api/v1/scoreboards/{scoreboardId}/standings",
+					competition.scoreboardId()).session(adminSession))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.visualCeiling").value(200));
 		score(competition.scoreboardId(), adminSession, null,
 				"{\"teamId\":\"" + redTeamId
 						+ "\",\"kind\":\"Debit\",\"amount\":100,\"reason\":\"Too much\"}")

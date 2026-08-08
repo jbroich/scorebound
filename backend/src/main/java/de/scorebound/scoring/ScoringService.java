@@ -142,6 +142,7 @@ public class ScoringService {
 				period.getId(), resolvedTeamId, memberId, kind, amount, updatedScore, normalizedReason,
 				actorId, normalizedKey));
 		participant.adjustScore(adjustment);
+		period.includeScore(updatedScore);
 		eventPublisher.publishAfterCommit(scoreboardId, ScoreboardEventType.SCORE_CREATED);
 		return new TransactionDetails(transaction, null, updatedScore);
 	}
@@ -189,6 +190,7 @@ public class ScoringService {
 		ScoreCancellation cancellation = cancellationRepository.save(
 				ScoreCancellation.create(transactionId, normalizedReason, actorId));
 		participant.adjustScore(reversal);
+		period.includeScore(updatedScore);
 		eventPublisher.publishAfterCommit(scoreboardId, ScoreboardEventType.SCORE_CANCELLED);
 		return new TransactionDetails(transaction, cancellation, updatedScore);
 	}
